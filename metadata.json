@@ -1,0 +1,6 @@
+{
+  "name": "Navigasi Jalan Santai HGN & HUT Ke-81 PGRI Pasirwangi",
+  "description": "Aplikasi Peta Interaktif & Navigasi Realtime Jalan Santai HGN dan HUT Ke-81 PGRI Kecamatan Pasirwangi dengan Deteksi Rute, Checkpoint POS, Peringatan Keluar Jalur, & Audio Notifikasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

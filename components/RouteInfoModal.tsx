@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { X, MapPin, Flag, CheckCircle, Navigation, Info, Share2, Copy, ExternalLink } from 'lucide-react';
 import { AppConfig, Checkpoint } from '@/lib/types';
 import { formatDistance, calculateHaversineDistance } from '@/lib/geo-utils';
@@ -41,9 +42,19 @@ export const RouteInfoModal: React.FC<RouteInfoModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-300">
-          <div className="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3">
-            <h4 className="font-extrabold text-blue-300 text-sm mb-1">{config.eventName}</h4>
-            <p className="text-slate-300 leading-relaxed">{config.announcementText}</p>
+          <div className="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 flex items-start gap-3">
+            <Image
+              src="https://i.imgur.com/x7KsYp1.png"
+              alt="Logo PGRI"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain shrink-0"
+              referrerPolicy="no-referrer"
+            />
+            <div>
+              <h4 className="font-extrabold text-blue-300 text-sm mb-1">{config.eventName}</h4>
+              <p className="text-slate-300 leading-relaxed">{config.announcementText}</p>
+            </div>
           </div>
 
           {/* Timeline list of Checkpoints */}

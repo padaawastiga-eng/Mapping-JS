@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Volume2, VolumeX, Shield, Users, Navigation, Radio, Lock, LogOut } from 'lucide-react';
 import { AppConfig } from '@/lib/types';
 
@@ -30,8 +31,15 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Top Banner Row */}
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-black text-white text-lg shadow-md border border-blue-400/30 shrink-0">
-            PGRI
+          <div className="w-11 h-11 rounded-xl bg-slate-950 p-1 flex items-center justify-center shadow-md border border-slate-700/60 shrink-0 overflow-hidden relative">
+            <Image
+              src="https://i.imgur.com/x7KsYp1.png"
+              alt="Logo PGRI"
+              width={44}
+              height={44}
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div>
             <h1 className="text-sm md:text-base font-extrabold text-white tracking-tight leading-tight">

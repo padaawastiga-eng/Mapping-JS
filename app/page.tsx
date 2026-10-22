@@ -11,9 +11,11 @@ import { PanitiaDashboard } from '@/components/PanitiaDashboard';
 import { AdminSettings } from '@/components/AdminSettings';
 import { PinAuthModal } from '@/components/PinAuthModal';
 import { DEFAULT_APP_CONFIG } from '@/lib/default-config';
-import { AppConfig, UserPosition, RouteCalculation } from '@/lib/types';
+import { AppConfig, UserPosition, RouteCalculation, RegisteredParticipant } from '@/lib/types';
 import { calculateRouteTelemetry, calculateHaversineDistance } from '@/lib/geo-utils';
 import { fetchDetailedRoadRoute } from '@/lib/route-fetcher';
+import { SAMPLE_DEFAULT_PARTICIPANTS } from '@/lib/excel-utils';
+import { fetchParticipantsFromSupabase, syncParticipantsToSupabase } from '@/lib/supabase';
 import { audioNotifier } from '@/lib/audio-utils';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -38,6 +40,7 @@ export default function HomePage() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [finishedTime, setFinishedTime] = useState<number | null>(null);
   const [gpsErrorMessage, setGpsErrorMessage] = useState<string | null>(null);
+  const [registeredParticipants, setRegisteredParticipants] = useState<RegisteredParticipant[]>(SAMPLE_DEFAULT_PARTICIPANTS);
 
   // Admin PIN Auth State
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
@@ -60,6 +63,34 @@ export default function HomePage() {
         const savedFinish = localStorage.getItem('jalan_santai_finish_time');
         if (savedFinish) setFinishedTime(Number(savedFinish));
 
+        const savedParticipants = localStorage.getItem('jalan_santai_registered_participants');
+        let initialList = SAMPLE_DEFAULT_PARTICIPANTS;
+        if (savedParticipants) {
+          try {
+            initialList = JSON.parse(savedParticipants);
+            setRegisteredParticipants(initialList);
+          } catch {
+            // Fallback
+          }
+        }
+
+        // Check remote Supabase database for persistent cloud data
+        fetchParticipantsFromSupabase().then((supabaseList) => {
+          if (supabaseList && supabaseList.length > 0) {
+            setRegisteredParticipants(supabaseList);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('jalan_santai_registered_participants', JSON.stringify(supabaseList));
+            }
+          }
+        }).catch(() => {});
+
+        // Sync initial participants list to server store
+        fetch('/api/participants?action=sync-registered', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ registeredList: initialList }),
+        }).catch(() => {});
+
         const savedAuth = sessionStorage.getItem('jalan_santai_admin_auth');
         if (savedAuth === 'true') {
           setIsAdminAuthenticated(true);
@@ -75,6 +106,22 @@ export default function HomePage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleUpdateParticipants = (newList: RegisteredParticipant[]) => {
+    setRegisteredParticipants(newList);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('jalan_santai_registered_participants', JSON.stringify(newList));
+    }
+    // Sync to Supabase cloud database
+    syncParticipantsToSupabase(newList).catch(() => {});
+
+    // Sync updated participants to server store immediately
+    fetch('/api/participants?action=sync-registered', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registeredList: newList }),
+    }).catch(() => {});
+  };
 
   // 2. Navigation & UI State
   const [activeTab, setActiveTab] = useState<'peserta' | 'panitia' | 'admin'>('peserta');
@@ -481,6 +528,8 @@ export default function HomePage() {
             completedCheckpointIds={completedCheckpointIds}
             isOffRoute={telemetry?.isOffRoute || false}
             finished={!!finishedTime}
+            detailedPolyline={detailedPolyline}
+            registeredParticipants={registeredParticipants}
             onSendAnnouncement={(text) => {
               audioNotifier.speak(`Pengumuman Panitia: ${text}`, 'high');
             }}
@@ -491,8 +540,10 @@ export default function HomePage() {
         {activeTab === 'admin' && isAdminAuthenticated && (
           <AdminSettings
             config={config}
+            registeredParticipants={registeredParticipants}
             onSaveConfig={handleSaveConfig}
             onResetToDefault={handleResetConfig}
+            onUpdateParticipants={handleUpdateParticipants}
           />
         )}
       </main>

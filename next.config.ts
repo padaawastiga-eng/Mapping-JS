@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ['xlsx'],
   output: 'standalone',
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {

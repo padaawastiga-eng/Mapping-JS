@@ -76,4 +76,16 @@ export interface PanitiaTelemetry {
   progress: number;
   isOffRoute: boolean;
   finished: boolean;
+  speed?: number | null;
+  institution?: string;
+}
+
+export interface RegisteredParticipant {
+  id: string;
+  nomorPeserta: string;
+  name: string;
+  institution: string; // Asal Sekolah / Ranting
+  registeredAt: number;
+  phone?: string;
+  notes?: string;
 }

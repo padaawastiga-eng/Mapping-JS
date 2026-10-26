@@ -213,40 +213,61 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+        <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
           <button
             type="button"
             onClick={() => setActiveAdminSubTab('peserta')}
-            className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition ${
+            className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 transition ${
               activeAdminSubTab === 'peserta'
                 ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
           >
-            <Users className="w-4 h-4" />
-            <span>DATA PESERTA TERDAFTAR ({registeredParticipants.length})</span>
+            <Users className="w-4 h-4 shrink-0" />
+            <span className="truncate">PESERTA ({registeredParticipants.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveAdminSubTab('supabase')}
+            className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 transition ${
+              activeAdminSubTab === 'supabase'
+                ? 'bg-emerald-600 text-white shadow-lg ring-2 ring-emerald-400/40'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            <Database className="w-4 h-4 shrink-0" />
+            <span className="truncate">SUPABASE DB</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveAdminSubTab('rute')}
-            className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition ${
+            className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 transition ${
               activeAdminSubTab === 'rute'
                 ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
           >
-            <Route className="w-4 h-4" />
-            <span>PENGATURAN RUTE & POS</span>
+            <Route className="w-4 h-4 shrink-0" />
+            <span className="truncate">RUTE & POS</span>
           </button>
         </div>
 
-        {/* SECTION UTAMA: DATA PESERTA TERDAFTAR (INPUT FORM, EXCEL TOOLS, DAFTAR PESERTA) */}
+        {/* SECTION 1: DATA PESERTA TERDAFTAR */}
         {activeAdminSubTab === 'peserta' && (
           <AdminParticipantManager
             participants={registeredParticipants}
             onUpdateParticipants={onUpdateParticipants || (() => {})}
             eventName={config.eventName}
+          />
+        )}
+
+        {/* SECTION 2: KONEKSI SUPABASE BACKEND */}
+        {activeAdminSubTab === 'supabase' && (
+          <SupabaseCard
+            participants={registeredParticipants}
+            onSyncComplete={() => {}}
           />
         )}
 

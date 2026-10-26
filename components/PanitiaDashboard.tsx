@@ -69,6 +69,7 @@ export const PanitiaDashboard: React.FC<PanitiaDashboardProps> = ({
 
   // Search for registered participants table
   const [registeredSearch, setRegisteredSearch] = useState('');
+  const [autoGpsLinkTracking, setAutoGpsLinkTracking] = useState<boolean>(true);
 
   // Poll participant positions from /api/participants every 4 seconds
   const fetchParticipants = useCallback(async () => {
@@ -117,7 +118,7 @@ export const PanitiaDashboard: React.FC<PanitiaDashboardProps> = ({
   // Post this device's live telemetry to /api/participants whenever userPos changes
   const lastReportedPosRef = useRef<string>('');
   useEffect(() => {
-    if (!userPos) return;
+    if (!userPos || !autoGpsLinkTracking) return;
 
     const posSignature = `${userPos.lat.toFixed(6)},${userPos.lng.toFixed(6)},${finished}`;
     if (posSignature === lastReportedPosRef.current) return;
@@ -145,7 +146,7 @@ export const PanitiaDashboard: React.FC<PanitiaDashboardProps> = ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }).catch(() => {});
-  }, [userPos, finished, completedCheckpointIds, isOffRoute, config.checkpoints]);
+  }, [userPos, finished, completedCheckpointIds, isOffRoute, config.checkpoints, autoGpsLinkTracking]);
 
   const currentPOSName = useMemo(() => {
     if (completedCheckpointIds.length > 0) {
@@ -388,6 +389,38 @@ export const PanitiaDashboard: React.FC<PanitiaDashboardProps> = ({
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh Radar</span>
+              </button>
+            </div>
+
+            {/* Pengaturan Khusus Auto-GPS Link Website */}
+            <div className="bg-gradient-to-r from-blue-950/80 via-indigo-950/70 to-slate-900 border border-blue-500/40 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-600 text-white shadow">
+                  <LocateFixed className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-white">PENGATURAN AUTO-GPS LINK WEBSITE</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-[10px] font-black text-emerald-400">
+                      {autoGpsLinkTracking ? 'AKTIF (OTOMATIS)' : 'NONAKTIF'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Saat pengguna / panitia / admin mengakses link website, lokasi GPS mereka langsung otomatis terlacak & terlihat di peta.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setAutoGpsLinkTracking((prev) => !prev)}
+                className={`px-4 py-2 rounded-xl font-extrabold text-xs transition shadow shrink-0 ${
+                  autoGpsLinkTracking
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                }`}
+              >
+                {autoGpsLinkTracking ? '✓ Auto-GPS Aktif' : 'Aktifkan Auto-GPS'}
               </button>
             </div>
 

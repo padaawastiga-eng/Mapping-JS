@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import type { Map as LeafletMap, TileLayer, Polyline, Marker } from 'leaflet';
 import { AppConfig, Checkpoint, PanitiaTelemetry } from '@/lib/types';
+import { OFFICIAL_PASIRWANGI_ROAD_ROUTE } from '@/lib/default-config';
 import { Layers, Maximize2, Search, AlertTriangle, CheckCircle2, User, RefreshCw } from 'lucide-react';
 
 interface PanitiaMapProps {
@@ -111,9 +112,9 @@ export const PanitiaMap: React.FC<PanitiaMapProps> = ({
 
       // Polyline (Road Route)
       const latLngs: [number, number][] =
-        detailedPolyline.length > 1
+        detailedPolyline && detailedPolyline.length > 1
           ? detailedPolyline
-          : config.checkpoints.map((cp) => [cp.lat, cp.lng]);
+          : OFFICIAL_PASIRWANGI_ROAD_ROUTE;
 
       if (polylineRef.current) {
         map.removeLayer(polylineRef.current);
@@ -177,6 +178,33 @@ export const PanitiaMap: React.FC<PanitiaMapProps> = ({
 
         checkpointMarkersRef.current[cp.id] = marker;
       });
+
+      // Trail badge for plantation walking path between POS 3 and POS 4
+      const pos3Cp = config.checkpoints.find((c) => c.id === 'POS_3' || c.name.includes('POS 3'));
+      const pos4Cp = config.checkpoints.find((c) => c.id === 'POS_4' || c.name.includes('POS 4'));
+      if (pos3Cp && pos4Cp) {
+        const midLat = (pos3Cp.lat + pos4Cp.lat) / 2;
+        const midLng = (pos3Cp.lng + pos4Cp.lng) / 2;
+        const trailIcon = L.divIcon({
+          className: 'custom-trail-badge',
+          html: `
+            <div class="px-2 py-0.5 rounded-full bg-blue-600/95 hover:bg-blue-500 text-white text-[10px] font-black border border-blue-300/80 shadow-lg flex items-center gap-1 cursor-pointer whitespace-nowrap transition-transform hover:scale-105">
+              <span>🌱 Jalur Kaki Perkebunan</span>
+            </div>
+          `,
+          iconSize: [140, 22],
+          iconAnchor: [70, 11],
+        });
+        const trailMarker = L.marker([midLat, midLng], { icon: trailIcon, zIndexOffset: 250 }).addTo(map);
+        trailMarker.bindPopup(`
+          <div class="p-2 text-slate-900 font-sans min-w-[190px]">
+            <div class="text-[10px] font-black text-blue-600 uppercase tracking-wider">JALUR JALAN KAKI RESMI</div>
+            <div class="text-sm font-black text-slate-900">Area Perkebunan Pasirwangi</div>
+            <div class="text-xs text-slate-600 mt-1">Jalur jalan kaki alami yang menyambungkan langsung POS 3 menuju POS 4 melintasi area perkebunan warga.</div>
+          </div>
+        `);
+        checkpointMarkersRef.current['TRAIL_PERKEBUNAN'] = trailMarker;
+      }
     });
   }, [config.checkpoints, config.polylineColor, config.polylineWeight, detailedPolyline, onSelectCheckpoint]);
 

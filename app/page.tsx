@@ -10,7 +10,7 @@ import { FinishCelebrationModal } from '@/components/FinishCelebrationModal';
 import { PanitiaDashboard } from '@/components/PanitiaDashboard';
 import { AdminSettings } from '@/components/AdminSettings';
 import { PinAuthModal } from '@/components/PinAuthModal';
-import { DEFAULT_APP_CONFIG } from '@/lib/default-config';
+import { DEFAULT_APP_CONFIG, OFFICIAL_PASIRWANGI_ROAD_ROUTE } from '@/lib/default-config';
 import { AppConfig, UserPosition, RouteCalculation, RegisteredParticipant } from '@/lib/types';
 import { calculateRouteTelemetry, calculateHaversineDistance } from '@/lib/geo-utils';
 import { fetchDetailedRoadRoute } from '@/lib/route-fetcher';
@@ -52,7 +52,25 @@ export default function HomePage() {
     const timer = setTimeout(() => {
       try {
         const savedConfig = localStorage.getItem('jalan_santai_config');
-        if (savedConfig) setConfig(JSON.parse(savedConfig));
+        if (savedConfig) {
+          try {
+            const parsedConfig: AppConfig = JSON.parse(savedConfig);
+            const isOutdated = parsedConfig.checkpoints?.some(
+              (cp) =>
+                (cp.id === 'POS_1' && Math.abs(cp.lat - (-7.219276)) > 0.0001) ||
+                (cp.id === 'POS_2' && Math.abs(cp.lat - (-7.216814)) > 0.0001) ||
+                (cp.id === 'POS_3' && Math.abs(cp.lat - (-7.214637)) > 0.0001) ||
+                (cp.id === 'POS_4' && Math.abs(cp.lat - (-7.218088)) > 0.0001)
+            );
+            if (isOutdated) {
+              parsedConfig.checkpoints = DEFAULT_APP_CONFIG.checkpoints;
+              localStorage.setItem('jalan_santai_config', JSON.stringify(parsedConfig));
+            }
+            setConfig(parsedConfig);
+          } catch {
+            setConfig(DEFAULT_APP_CONFIG);
+          }
+        }
 
         const savedCompleted = localStorage.getItem('jalan_santai_completed_cp');
         if (savedCompleted) setCompletedCheckpointIds(JSON.parse(savedCompleted));
@@ -130,7 +148,7 @@ export default function HomePage() {
   const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   const [isRouteInfoOpen, setIsRouteInfoOpen] = useState<boolean>(false);
   const [isCelebrationOpen, setIsCelebrationOpen] = useState<boolean>(false);
-  const [detailedPolyline, setDetailedPolyline] = useState<[number, number][]>([]);
+  const [detailedPolyline, setDetailedPolyline] = useState<[number, number][]>(OFFICIAL_PASIRWANGI_ROAD_ROUTE);
 
   // 3. User Geolocation State
   const [gpsActive, setGpsActive] = useState<boolean>(false);

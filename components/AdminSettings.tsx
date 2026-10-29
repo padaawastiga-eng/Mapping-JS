@@ -20,6 +20,7 @@ import {
   Database,
 } from 'lucide-react';
 import { AppConfig, Checkpoint, RegisteredParticipant } from '@/lib/types';
+import { DEFAULT_APP_CONFIG } from '@/lib/default-config';
 import { AdminParticipantManager } from './AdminParticipantManager';
 import { SupabaseCard } from './SupabaseCard';
 
@@ -203,7 +204,10 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
           {activeAdminSubTab === 'rute' && (
             <button
               type="button"
-              onClick={onResetToDefault}
+              onClick={() => {
+                onResetToDefault();
+                setFormData(JSON.parse(JSON.stringify(DEFAULT_APP_CONFIG)));
+              }}
               className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition border border-slate-700 shrink-0"
             >
               <RotateCcw className="w-3.5 h-3.5" />

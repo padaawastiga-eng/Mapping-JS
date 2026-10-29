@@ -63,11 +63,10 @@ export const MapComponent: React.FC<MapProps> = ({
       tileLayerRef.current = tileLayer;
       mapRef.current = map;
 
-      // Fit bounds to initial checkpoints
-      if (config.checkpoints.length > 0) {
-        const bounds = L.latLngBounds(config.checkpoints.map((cp) => [cp.lat, cp.lng]));
-        map.fitBounds(bounds, { padding: [40, 40] });
-      }
+      // Fit bounds to full official road route
+      const initialRoute = detailedPolyline && detailedPolyline.length > 1 ? detailedPolyline : OFFICIAL_PASIRWANGI_ROAD_ROUTE;
+      const bounds = L.latLngBounds(initialRoute);
+      map.fitBounds(bounds, { padding: [40, 40] });
     });
 
     return () => {
@@ -76,7 +75,7 @@ export const MapComponent: React.FC<MapProps> = ({
         mapRef.current = null;
       }
     };
-  }, [config.checkpoints]);
+  }, [config.checkpoints, detailedPolyline]);
 
   // Update Tile Layer (Standard vs Satellite)
   useEffect(() => {
@@ -298,6 +297,20 @@ export const MapComponent: React.FC<MapProps> = ({
       }
     });
   }, [userPos, telemetry, followUserMode, isSimulating]);
+
+  // Re-fit bounds to full route whenever follow user mode is turned off
+  useEffect(() => {
+    if (!followUserMode && mapRef.current) {
+      import('leaflet').then((L) => {
+        const routePoints =
+          detailedPolyline && detailedPolyline.length > 1
+            ? detailedPolyline
+            : OFFICIAL_PASIRWANGI_ROAD_ROUTE;
+        const bounds = L.latLngBounds(routePoints);
+        mapRef.current?.fitBounds(bounds, { padding: [40, 40] });
+      });
+    }
+  }, [followUserMode, detailedPolyline]);
 
   return (
     <div className="relative w-full h-full min-h-[350px] bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-inner">

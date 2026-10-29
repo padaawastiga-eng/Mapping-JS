@@ -144,7 +144,8 @@ export default function HomePage() {
   // 2. Navigation & UI State
   const [activeTab, setActiveTab] = useState<'peserta' | 'panitia' | 'admin'>('peserta');
   const [tileType, setTileType] = useState<'standard' | 'satellite'>('standard');
-  const [followUserMode, setFollowUserMode] = useState<boolean>(true);
+  const [followUserMode, setFollowUserMode] = useState<boolean>(false);
+  const [selectedCpId, setSelectedCpId] = useState<string | null>(null);
   const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   const [isRouteInfoOpen, setIsRouteInfoOpen] = useState<boolean>(false);
   const [isCelebrationOpen, setIsCelebrationOpen] = useState<boolean>(false);
@@ -511,6 +512,53 @@ export default function HomePage() {
               onShareWhatsApp={handleShareWhatsApp}
             />
 
+            {/* Quick POS Navigation Bar */}
+            <div className="bg-slate-900/90 border border-slate-800 p-2.5 rounded-2xl flex items-center gap-2 overflow-x-auto no-scrollbar shadow">
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 pl-1">
+                <span>📍</span>
+                <span>FOKUS POS:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCpId(null);
+                  setFollowUserMode(false);
+                }}
+                className={`px-3 py-1 rounded-xl text-xs font-black shrink-0 transition flex items-center gap-1 ${
+                  !selectedCpId
+                    ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-400'
+                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>🗺️</span>
+                <span>Seluruh Rute</span>
+              </button>
+              {config.checkpoints.map((cp) => {
+                const isPassed = completedCheckpointIds.includes(cp.id);
+                const isSelected = selectedCpId === cp.id;
+                return (
+                  <button
+                    key={cp.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCpId(cp.id);
+                      setFollowUserMode(false);
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs font-black shrink-0 transition flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400'
+                        : isPassed
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    }`}
+                  >
+                    <span>{cp.type === 'START' ? '🚀' : cp.type === 'FINISH' ? '🏁' : '📍'}</span>
+                    <span>{cp.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Leaflet Interactive Map */}
             <div className="h-[55vh] min-h-[380px] max-h-[600px] w-full">
               <MapComponent
@@ -521,6 +569,7 @@ export default function HomePage() {
                 followUserMode={followUserMode}
                 completedCheckpointIds={completedCheckpointIds}
                 detailedPolyline={detailedPolyline}
+                selectedCheckpointId={selectedCpId}
                 isSimulating={isSimulating}
               />
             </div>

@@ -14,6 +14,7 @@ interface MapProps {
   completedCheckpointIds: string[];
   detailedPolyline?: [number, number][];
   onSelectCheckpoint?: (cp: Checkpoint) => void;
+  selectedCheckpointId?: string | null;
   isSimulating?: boolean;
 }
 
@@ -26,12 +27,14 @@ export const MapComponent: React.FC<MapProps> = ({
   completedCheckpointIds,
   detailedPolyline = [],
   onSelectCheckpoint,
+  selectedCheckpointId,
   isSimulating = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const tileLayerRef = useRef<TileLayer | null>(null);
   const polylineRef = useRef<Polyline | null>(null);
+  const outerPolylineRef = useRef<Polyline | null>(null);
   const markersRef = useRef<Record<string, Marker>>({});
   const userMarkerRef = useRef<Marker | null>(null);
   const userAccuracyCircleRef = useRef<Circle | null>(null);
@@ -119,18 +122,32 @@ export const MapComponent: React.FC<MapProps> = ({
           ? detailedPolyline
           : OFFICIAL_PASIRWANGI_ROAD_ROUTE;
 
+      if (outerPolylineRef.current) {
+        map.removeLayer(outerPolylineRef.current);
+      }
       if (polylineRef.current) {
         map.removeLayer(polylineRef.current);
       }
 
-      const polyline = L.polyline(latLngs, {
-        color: config.polylineColor || '#2563eb', // Blue road line
-        weight: config.polylineWeight || 6,
-        opacity: 0.9,
+      // Outer casing line for high contrast against map background
+      const outerPolyline = L.polyline(latLngs, {
+        color: '#1d4ed8',
+        weight: 10,
+        opacity: 0.5,
         lineCap: 'round',
         lineJoin: 'round',
       }).addTo(map);
 
+      // Inner main royal blue road line
+      const polyline = L.polyline(latLngs, {
+        color: config.polylineColor || '#2563eb', // Royal Blue
+        weight: 6,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(map);
+
+      outerPolylineRef.current = outerPolyline;
       polylineRef.current = polyline;
 
       // 2. Checkpoint Markers
@@ -311,6 +328,19 @@ export const MapComponent: React.FC<MapProps> = ({
       });
     }
   }, [followUserMode, detailedPolyline]);
+
+  // Fly to selected checkpoint when tapped
+  useEffect(() => {
+    if (!selectedCheckpointId || !mapRef.current) return;
+    const cp = config.checkpoints.find((c) => c.id === selectedCheckpointId);
+    if (cp) {
+      mapRef.current.flyTo([cp.lat, cp.lng], 18, { duration: 0.8 });
+      const marker = markersRef.current[cp.id];
+      if (marker) {
+        marker.openPopup();
+      }
+    }
+  }, [selectedCheckpointId, config.checkpoints]);
 
   return (
     <div className="relative w-full h-full min-h-[350px] bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-inner">
